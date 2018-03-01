@@ -1,0 +1,87 @@
+clc;
+close all;
+clear all;
+study_name = {'JHU','NIDAc'};
+addpath('C:\Users\aungkon\Desktop\jhu\code\code_final_1\functions\');
+load('C:\Users\aungkon\Desktop\jhu\code\code_final_1\data\activity_parameter.mat');
+load('C:\Users\aungkon\Desktop\jhu\code\code_final_1\data\cocaine_windows.mat');
+count = 1;
+count1 = 1;
+% skew =[];
+% kurt =[];
+windows = {};
+for k=1:length(study_name)
+        if length(char(study_name(k)))<=3
+            p=3;
+        else
+            p=7;
+        end
+       for i=1:p
+           load(['C:\Users\aungkon\Desktop\jhu\data\windows\' char(study_name(k)) '\p' num2str(i,'%02d') 'window' char(study_name(k)) '.mat']);
+           for j=1:length(window.label) 
+               if window.label(j) <= 1 && window.activation.activity{j} == 0 
+                    x=window.recovery.timestamp{j};
+                     y=window.recovery.sample{j};
+                     minimum_index = find(y==min(y));
+                     x = x(minimum_index:end);
+                     y = y(minimum_index:end);
+                     B = prctile(y,99);
+                     ind = [length(y)];
+                     if ~isempty(ind)
+                          x_final = x(1:ind(1));
+                          y_final = y(1:ind(1));
+                         if ~isempty(y_final) && length(x_final) > 600 && B - y_final(1) > 140 && max(diff(60000./y_final)) < 10 && length(find(diff(y)==0))/length(y) < .2
+                                  windows.timestamp{count} =  x_final;
+                                  windows.sample{count} =  y_final;
+                                  windows.label(count) = window.label(j);
+                                  windows.study(count) = k;
+                                  windows.participant(count) = i;
+                                  windows.activity(count) = window.recovery.activity{j};
+                                  windows.act_sample{count} = window.activation.sample{j};
+%                               figure1 = figure;
+%                               hold on;
+%                               plot(x_final,y_final);
+%                                 pause(.5);
+%                               saveas(gcf,['C:\Users\aungkon\Desktop\Em\picture_activity_windows\' num2str(count) '.jpg']);
+%                                close(figure1);
+%                               skew(count) = skewness(B-y_final);
+%                               kurt(count) = kurtosis(B-y_final);
+                                count =count +1;
+                          end
+                     end
+               end
+           end
+           
+           for j=1:length(window.label) 
+               if window.label(j) > 10 && window.activation.activity{j} == 0 
+                    x=window.recovery.timestamp{j};
+                     y=window.recovery.sample{j};
+                     minimum_index = find(y==min(y));
+                     x = x(minimum_index:end);
+                     y = y(minimum_index:end);
+                     x_final = x(1:end);
+                     y_final = y(1:end);
+                      B = prctile(y,99);
+                     if ~isempty(y_final) && length(x_final) > 600  && B - y_final(1) > 140 && max(diff(60000./y_final)) < 10 && length(find(diff(y)==0))/length(y) < .2
+%                               figure1 = figure;
+%                               plot(x_final,y_final);
+%                               pause(1);
+%                               saveas(gcf,['C:\Users\aungkon\Desktop\Em\picture_activity_windows\' num2str(count) '.jpg']);
+%                                close(figure1);
+%                                skew(count1) = skewness(B-y_final);
+%                                kurt(count1) = kurtosis(B-y_final);
+                          windows.timestamp{count} =  x_final;
+                          windows.sample{count} =  y_final;
+                          windows.label(count) = window.label(j);
+                          windows.study(count) = k;
+                          windows.participant(count) = i;   
+                          windows.activity(count) = window.recovery.activity{j};
+                          windows.act_sample{count} = window.activation.sample{j};
+                          count = count + 1;
+                          count1 =count1 +1;
+                     end
+               end
+           end      
+       end
+end
+save(['C:\Users\aungkon\Desktop\jhu\code\code_final_1\data\window_store.mat'],'windows');
